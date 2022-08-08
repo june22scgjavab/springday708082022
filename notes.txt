@@ -1,0 +1,371 @@
+The primary key should not be entered by the user. It should be auto generated 
+either by the Database or by the code ( Java code/program).
+
+IDENTITY strategy
+
+TABLE strategy
+
+SEQUENCE strategy
+
+AUTO strategy
+
+
+CREATE TABLE customer (
+	customer_id int AUTO_INCREMENT,
+	email_id varchar(20),
+	name varchar(10),
+	date_of_birth date,
+	constraint ps_customer_id_pk primary key (customer_id)
+);
+
+CREATE TABLE customer (
+	customer_id int PRIMARY KEY AUTO_INCREMENT,
+	email_id varchar(20),
+	name varchar(10),
+	date_of_birth date
+
+);
+INSERT INTO customer(email_id,name,date_of_birth) VALUES('john@infy.com','John','1978-10-12');
+INSERT INTO customer(email_id,name,date_of_birth) VALUES('paul@infy.com','Paul','1978-10-12');
+
+SELECT * FROM customer;
+
+---------------------------------------------------------------------------------------------------------------------------
+@Entity
+public class Customer{
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private Integer customerId;
+	
+    // rest of the code
+
+}
+
+------------------------------------------------------------------------------
+In table strategy
+
+We need to have the below table created before we start working on generating the id with the default table strategy.
+
+Table name hibernate_sequences with sequence_name  and next_val as columns.
+sequence name will be of varchar and will be the primary key and next_val will be of int type.
+
+The table will be used by hibernate framework to store the last generated value.
+
+create table hibernate_sequences (
+sequence_name varchar(10) not null,
+next_val int,
+primary key (sequence_name)
+);
+
+
+create table customer (
+	customer_id int ,
+	email_id varchar(20),
+	name varchar(10),
+	date_of_birth date,
+	constraint ps_customer_id_pk primary key ( customer_id )
+);
+
+package com.infy.entity;
+import java.time.LocalDate;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+@Entity
+public class Customer{
+	@Id
+	@GeneratedValue(strategy=GenerationType.TABLE)
+	private Integer customerId;
+	private String emailId;
+	private String name;
+	private LocalDate dateOfBirth;
+	public Integer getCustomerId() {
+		return customerId;
+	}
+	public void setCustomerId(Integer customerId) {
+		this.customerId = customerId;
+	}
+	public String getEmailId() {
+		return emailId;
+	}
+	public void setEmailId(String emailId) {
+		this.emailId = emailId;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public LocalDate getDateOfBirth() {
+		return dateOfBirth;
+	}
+	public void setDateOfBirth(LocalDate dateOfBirth) {
+		this.dateOfBirth = dateOfBirth;
+	}
+	@Override
+	public int hashCode() {
+		return 31;
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Customer other = (Customer) obj;
+		if (this.getCustomerId() == null) {
+			if (other.getCustomerId() != null)
+				return false;
+		} else if (!this.getCustomerId().equals(other.getCustomerId())) {
+			return false;
+		}
+		return true;
+	}
+	
+}
+
+
+
+In the customer table if you skip entering customer_id from SQL prompt, It will show error as customer_id is a primary key and
+also not kept as auto_incremented.
+
+Now if we enter any value of customer_id from user in the SQL prompt, they will be accepted and stored.
+
+But if we try to enter the data from Spring data , with id generated with TABLE strategy, it will check what is the last value
+for next_val and accordingly it will make an increment of 1 and add customer_id in the table and update the hibernate_sequences
+table's next_val column with the last value generated so that next time when we again insert the record from the Java code, it
+will take that value as reference and make an imcrment of 1.
+----------------------------------------------------------------------------------------------------------------------------
+Generating id/primary with custom table. So for custom table approach we can have our own table name, column names But the 
+data types remain same. The primary key column as varchar and the non primary key which is holding the last value generated as int.
+
+create table id_gen (
+gen_key varchar(10) not null,
+gen_value int,
+primary key (gen_key)
+);
+
+
+create table customer (
+	customer_id int primary key,
+	email_id varchar(20),
+	name varchar(10),
+	date_of_birth date
+);
+
+insert into customer (customer_id, email_id, name, date_of_birth) values (552092, 'martin@infy.com', 'Martin', sysdate()- interval 9136 day);
+insert into id_gen(gen_key,gen_value) values ('cust_id',1000);
+commit;
+select * from customer;
+
+select * from id_gen;
+------------------------------------------------------------------------------------------------------------------
+Here we can go for customizing the first value of the primary key. In the above example we can see the first value as 1000.
+This means when we insert the first record from Java code, it will generate the new id with the value 10001.
+
+package com.infy.entity;
+import java.time.LocalDate;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.TableGenerator;
+@Entity
+public class Customer{
+	@Id
+	@TableGenerator(
+            name="pkgen", 
+            table="id_gen", 
+            pkColumnName="gen_key", 
+            valueColumnName="gen_value",
+            pkColumnValue="cust_id",
+            allocationSize=1
+            )
+	@GeneratedValue(generator="pkgen",strategy=GenerationType.TABLE)
+	private Integer customerId;
+	private String emailId;
+	private String name;
+	private LocalDate dateOfBirth;
+	public Integer getCustomerId() {
+		return customerId;
+	}
+	public void setCustomerId(Integer customerId) {
+		this.customerId = customerId;
+	}
+	public String getEmailId() {
+		return emailId;
+	}
+	public void setEmailId(String emailId) {
+		this.emailId = emailId;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public LocalDate getDateOfBirth() {
+		return dateOfBirth;
+	}
+	public void setDateOfBirth(LocalDate dateOfBirth) {
+		this.dateOfBirth = dateOfBirth;
+	}
+	@Override
+	public int hashCode() {
+		return 31;
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Customer other = (Customer) obj;
+		if (this.getCustomerId() == null) {
+			if (other.getCustomerId() != null)
+				return false;
+		}else if (!this.getCustomerId().equals(other.getCustomerId())) {
+			return false;
+		}
+		return true;
+	}
+}
+-------------------------------------------------------------------------------------------------------------
+
+In this strategy, the persistence provider automatically selects an appropriate strategy for generating primary key values depending on the database used. For example, if Hibernate 5.0 is the persistence provider and MySQL database is used, then this strategy selects the TABLE strategy (hibernate_sequences table) for generating primary key values.
+
+@Entity
+public class Customer {
+   @Id 
+   @GeneratedValue(strategy=GenerationType.AUTO)
+   private int customerId;
+   //rest of the code 
+}
+
+-------------------------------------------------------------------------------------------------------------
+For identity strategy
+        @Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+
+CREATE TABLE customer (
+	customer_id int AUTO_INCREMENT,
+	email_id varchar(20),
+	name varchar(10),
+	date_of_birth date,
+	constraint ps_customer_id_pk primary key (customer_id)
+);
+
+
+For default table strategy
+        @Id
+	@GeneratedValue(strategy=GenerationType.TABLE)
+
+create table hibernate_sequences (
+sequence_name varchar(10) not null,
+next_val int,
+primary key (sequence_name)
+);
+
+
+create table customer (
+	customer_id int ,
+	email_id varchar(20),
+	name varchar(10),
+	date_of_birth date,
+	constraint ps_customer_id_pk primary key ( customer_id )
+);
+
+
+
+
+
+
+For customised table strategy
+
+create table id_gen (
+gen_key varchar(10) not null,
+gen_value int,
+primary key (gen_key)
+);
+
+
+create table customer (
+	customer_id int primary key,
+	email_id varchar(20),
+	name varchar(10),
+	date_of_birth date
+);
+
+
+
+        @Id
+	@TableGenerator(
+            name="pkgen", 
+            table="id_gen", 
+            pkColumnName="gen_key", 
+            valueColumnName="gen_value",
+            pkColumnValue="cust_id",
+            allocationSize=1
+            )
+	@GeneratedValue(generator="pkgen",strategy=GenerationType.TABLE)
+
+
+
+
+
+For auto strategy
+    @Id 
+    @GeneratedValue(strategy=GenerationType.AUTO)
+create table customer (
+	customer_id int primary key,
+	email_id varchar(20),
+	name varchar(10),
+	date_of_birth date
+);
+
+
+
+
+For sequence strategy
+        @Id
+	@GeneratedValue(strategy=GenerationType.SEQUENCE)
+
+ Not supported in MYSQL.
+-----------------------------------------------------------------------------------------------------------------------------------
+
+DEGREE and CARDINALITY of TABLE/RELATION===> Degree means number of columns and cardinality means number of records/tuples.
+DEGREE and CARDINALITY of a relationship===> Degree means how many entities/tables are invloved in the relationship unary,binary.
+CARDINALITY one-one , one-to-many, many-to-one, many-to-many. 
+
+
+Employee and managers details ===> One table
+
+employeedetails
+empid empname basic   mgrid
+E0001 Robert  23000   null
+E0002 Sohel   15000   E0001
+E0003 Rita    12000   E0001
+------------------------------------------------------------------------------------------------------------------------------------
+Relationship among entities
+
+
+Directionality
+
+The Customer has a reference of Address class. So you can get the address of a customer if you know customerId. But you cannot get details of a customer if you know addressId because the Address class does not have a reference of Customer class. Such type of relationships is called unidirectional relationship. In these relationships the class which has reference of other class is called as owner or source of the relationship and the class whose reference is present is called a target of the relationship. So here, the Customer is the owner and the Address is the target.
+
+Owner class and Target class. So according to the code Customer is the owner class and Target is Address class. 
+
+The Customer has a reference of Address class and vice versa. So you can get the address of a customer if you know customerId and also customer details if you know addressId. Such types of relationships are called a bidirectional relationship
+
+CascadeType.ALL
+  * PERSIST
+  * REMOVE
+  * REFRESH
+  * DETACH
+  * MERGE
