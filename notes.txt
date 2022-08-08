@@ -369,3 +369,127 @@ CascadeType.ALL
   * REFRESH
   * DETACH
   * MERGE
+----------------------------------------------------------------------------------
+// Optional is a class given in Java version 8 onwards to handle null values and to avoid getting
+// NullPointerException.
+
+    Optional<Customer>   optionalCustomer=customerRepository.findById(10);
+// How we decide that Optional generic type parameter will be of Customer type?
+
+// In the below line with the method orElseThrow() we are asking for the reference of Customer object if
+// if it is available otherwise we need to generate an object of User Defined exception class.
+   ()-> lambda expression with no parameters passed to the method  
+
+   methodOuter(method(){
+            throw new InfyBankException("Validator.CUSTOMER_NOT_FOUND");  // one line is present
+             });
+
+
+   orElseThrow(()->{});
+// If for the execution of the method which is passed as a reference is having a single statement 
+// to execute , in that case we can avoid enclosing the line within {}.
+
+
+
+Customer customer=optionalCustomer.orElseThrow(()->throw new InfyBankException("Validator.CUSTOMER_NOT_FOUND"));
+
+CustomerDTO customerDTO=new CustomerDTO();
+customerDTO.setCustomerId(customer.getCustomerId());
+
+return customerDTO;
+
+
+
+
+// Method reference can also be passed to another method.
+  
+   Customer customer=optionalCustomer.orElseThrow(()->);
+
+
+public class CustomerRepository extends CrudRepository<Customer,Integer> {}
+----------------------------------------------------------------------------------
+	Optional<Customer> optional = customerRepository.findById(customerId);
+	//Customer customer0= customerRepository.findById(customerId).get();
+	Customer customer = optional.orElseThrow(() -> new InfyBankException("Service.INVALID_CUSTOMERID"));
+---------------------------------------------------------------------------------------------------------------------------------
+Pass the id for Customer for Book or for Movie whether you will be able to write the code or not?
+
+APPROACH first:
+
+
+	public CustomerDTO getCustomer(Integer customerId) throws InfyBankException {
+		Optional<Customer> optional = customerRepository.findById(customerId);
+		Customer customer = optional.orElseThrow(() -> new InfyBankException("Service.INVALID_CUSTOMERID"));
+		CustomerDTO customerDTO = new CustomerDTO();
+		customerDTO.setCustomerId(customer.getCustomerId());
+		customerDTO.setName(customer.getName());
+		customerDTO.setEmailId(customer.getEmailId());
+		customerDTO.setDateOfBirth(customer.getDateOfBirth());
+		AddressDTO addressDTO = new AddressDTO();
+		addressDTO.setAddressId(customer.getAddress().getAddressId());
+		addressDTO.setCity(customer.getAddress().getCity());
+		addressDTO.setStreet(customer.getAddress().getStreet());
+		customerDTO.setAddress(addressDTO);
+		return customerDTO;
+	}
+--------------------------------------------------------------------------------------------------------------------------------------
+
+	public CustomerDTO getCustomer(Integer customerId) throws InfyBankException {
+		Customer customer = customerRepository.findById(customerId).get();
+                if(customer==null){
+		 throw new InfyBankException("Service.INVALID_CUSTOMERID"));
+		}
+                CustomerDTO customerDTO = new CustomerDTO();
+		customerDTO.setCustomerId(customer.getCustomerId());
+		customerDTO.setName(customer.getName());
+		customerDTO.setEmailId(customer.getEmailId());
+		customerDTO.setDateOfBirth(customer.getDateOfBirth());
+		AddressDTO addressDTO = new AddressDTO();
+		addressDTO.setAddressId(customer.getAddress().getAddressId());
+		addressDTO.setCity(customer.getAddress().getCity());
+		addressDTO.setStreet(customer.getAddress().getStreet());
+		customerDTO.setAddress(addressDTO);
+		return customerDTO;
+	}
+---------------------------------------------------------------------------------------------------
+
+We are able to see the info in the console but if we have any error that is logged inside the log file. What is the reason
+and how we have mentioned the same. 
+
+log4j.properties file and check the class annotated with @Aspect and check the advice @AfterThrowing.
+
+--------------------------------------------------------------------------------------------------------------------------------
+One-To-One
+Many-To-One 
+
+-----------------------------------------------------------------------------------------------------------------------------------
+Service Layer 
+   Logger==>Log4j
+   AOP====> advice ThrowingException
+   JUNIT and Mockito
+
+Persistence Layer
+JPQL
+Spring Data
+Various query approaches
+  * by method name
+  * @Query
+  * @NamedQuery
+Pagination and Sorting
+ID generation
+One to one
+Many to one
+-----------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
